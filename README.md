@@ -48,3 +48,78 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## 📂 Project Structure
+
+```
+smart-room/
+│── assets/                # Images, icons, logos
+│── src/
+│   ├── api/               # API handlers (REST, WebSocket, MQTT)
+│   ├── components/        # Reusable UI components
+│   ├── contexts/          # Context API (if used)
+│   ├── hooks/             # Custom hooks
+│   ├── screens/           # Screens (Home, Devices, Settings...)
+│   ├── store/             # State management (Redux/Zustand)
+│   ├── utils/             # Utility functions
+│   ├── navigation/        # Navigation setup (React Navigation)
+│   ├── config/            # App configurations
+│── App.js                 # Entry point
+│── package.json
+│── babel.config.js
+```
+
+### State Management (Choose One)
+
+- **Redux Toolkit:**
+  ```sh
+  npm install @reduxjs/toolkit react-redux
+  ```
+- **Zustand:**
+  ```sh
+  npm install zustand
+  ```
+
+### Smart Device Communication Recommendation :v
+
+- **WebSocket:**
+  ```sh
+  npm install @react-native-community/netinfo socket.io-client
+  ```
+- **MQTT (Mosquitto, EMQX, AWS IoT Core...):**
+  ```sh
+  npm install mqtt
+  ```
+- **Bluetooth (BLE):**
+  ```sh
+  npm install react-native-ble-plx
+  ```
+- **WiFi Control:**
+  ```sh
+  npm install react-native-wifi-reborn
+  ```
+
+### UI/UX Enhancements
+
+- **React Native Paper (Material Design):**
+  ```sh
+  npm install react-native-paper
+  ```
+- **Tailwind CSS for React Native:**
+  ```sh
+  npm install nativewind
+  ```
+
+## 🛠️ Debugging & Testing
+
+- **React Native Debugger** (Redux, Network, AsyncStorage...)
+- **Expo DevTools** (Live Debugging)
+- **Jest / React Native Testing Library** (Unit testing)
+
+## 📜 License
+
+This project is licensed under the MIT License.
+
+---
+
+Feel free to contribute or report issues! 🚀
