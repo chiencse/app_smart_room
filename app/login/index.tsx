@@ -8,10 +8,12 @@ import {
   Image,
 } from "react-native";
 import { useRouter } from "expo-router";
-import Constants from "expo-constants";
 import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import config from "@/constants/ConfigEnv";
 
-const BACKEND_URL = Constants.expoConfig?.extra?.BACKEND_URL ?? "";
+WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -19,17 +21,25 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Google Auth Configuration
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "YOUR_EXPO_CLIENT_ID",
-    iosClientId: "YOUR_IOS_CLIENT_ID",
-    androidClientId: "YOUR_ANDROID_CLIENT_ID",
-    webClientId: "YOUR_WEB_CLIENT_ID",
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    androidClientId: process.env.ANDROID_CLIENT_ID,
+    webClientId: process.env.WEB_CLIENT_ID,
+    scopes: ["profile", "email"],
+    redirectUri: "https://auth.expo.io/@chiencse/smartRoom",
   });
+
+  // Function to save token to AsyncStorage
+  const saveToken = async (token: string) => {
+    try {
+      await AsyncStorage.setItem("authToken", token);
+      console.log("Token saved successfully");
+    } catch (error) {
+      console.error("Failed to save token:", error);
+    }
+  };
 
   // Function to validate username format
   const isValidUsername = (username: string) => {
-    // Username validation: 3-20 characters, letters, numbers, underscore, hyphen
     const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
     return usernameRegex.test(username);
   };
@@ -37,7 +47,6 @@ const LoginScreen = () => {
   // Handle Username/Password Login
   const handleLogin = async () => {
     setError(""); // Reset error state
-
     if (!username || !password) {
       setError("Both fields are required!");
       return;
@@ -51,7 +60,7 @@ const LoginScreen = () => {
     }
 
     try {
-      const response = await fetch(`${BACKEND_URL}/login`, {
+      const response = await fetch(`${config.BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,10 +73,17 @@ const LoginScreen = () => {
       }
 
       const data = await response.json();
-      Alert.alert("Login Successful", `Welcome, ${username}!`);
-      router.push("/home");
+      console.log(data);
+      const token = data?.data?.token;
+      if (token) {
+        await saveToken(token); // Save the token
+        Alert.alert("Login Successful", `Welcome, ${username}!`);
+        router.push("/home");
+      } else {
+        throw new Error("No token received from server");
+      }
     } catch (error) {
-      setError("Login failed. Please check your credentials.");
+      setError("Login failed. Please check your credentials." + error);
     }
   };
 
@@ -79,21 +95,31 @@ const LoginScreen = () => {
         const accessToken = result.authentication?.accessToken;
 
         // Send token to backend for verification
-        const response = await fetch(`${BACKEND_URL}/google-login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: accessToken }),
-        });
+        const response = await fetch(
+          `${config.BACKEND_URL}/auth/google/login`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ token: accessToken }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Google login failed");
         }
 
         const data = await response.json();
-        Alert.alert("Login Successful", "Welcome!");
-        router.push("/home");
+        const token = data.token; // Assuming backend returns a token
+
+        if (token) {
+          await saveToken(token); // Save the token
+          Alert.alert("Login Successful", "Welcome!");
+          router.push("/home");
+        } else {
+          throw new Error("No token received from server");
+        }
       }
     } catch (error) {
       setError("Google login failed. Please try again.");
@@ -147,6 +173,14 @@ const LoginScreen = () => {
       >
         <Text className="text-white text-center font-semibold text-lg">
           LOGIN
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        className="py-4 rounded-lg mt-4 bg-blue-500"
+        onPress={() => router.push("/temp")}
+      >
+        <Text className="text-white text-center font-semibold text-lg">
+          Route
         </Text>
       </TouchableOpacity>
 

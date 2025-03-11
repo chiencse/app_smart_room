@@ -9,6 +9,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from "jwt-decode";
 import "react-native-reanimated";
 import "../global.css";
 
@@ -30,7 +31,18 @@ export default function RootLayout() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = await AsyncStorage.getItem("authToken");
+        const token: any = await AsyncStorage.getItem("authToken");
+        console.log("Token found:", token);
+        const decodedToken: any = jwtDecode(token);
+        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+
+        if (decodedToken.exp < currentTime) {
+          // Token is expired, delete it
+          await AsyncStorage.removeItem("userToken");
+          console.log("Token expired and removed");
+          setIsAuthenticated(false);
+        }
+
         setIsAuthenticated(!!token);
       } catch (error) {
         console.error("Error checking authentication:", error);
