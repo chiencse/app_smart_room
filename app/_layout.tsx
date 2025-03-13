@@ -1,39 +1,56 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import DashBoardScreen from "./dashboard";
+import ProfileScreen from "./profile";
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+const Tab = createBottomTabNavigator();
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+function RootLayout() {
+    return (
+        <Tab.Navigator
+            screenOptions={{
+                headerShown: false,
+                tabBarLabelPosition: "beside-icon",
+                tabBarStyle: {
+                    position: "absolute",
+                    bottom: 10,
+                    elevation: 0,
+                    backgroundColor: "#000000",
+                    borderRadius: 20,
+                    height: 60,
+                    margin: 10,
+                },
+                tabBarActiveTintColor: "white",
+            }}
+        >
+            <Tab.Screen
+                name="Dashboard"
+                component={DashBoardScreen}
+                options={{
+                    tabBarIcon: ({ color }) => (
+                        <MaterialIcons
+                            name="dashboard"
+                            size={24}
+                            color={color}
+                        />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{
+                    tabBarIcon: ({ color }) => (
+                        <FontAwesome5 name="user-alt" size={24} color={color} />
+                    ),
+                }}
+            />
+        </Tab.Navigator>
+    );
 }
+
+export default RootLayout;
