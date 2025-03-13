@@ -22,10 +22,9 @@ const LoginScreen = () => {
   const [error, setError] = useState("");
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    androidClientId: process.env.ANDROID_CLIENT_ID,
-    webClientId: process.env.WEB_CLIENT_ID,
+    androidClientId: process.env.ANDROID_CLIENT_ID || "",
+    webClientId: process.env.WEB_CLIENT_ID || "",
     scopes: ["profile", "email"],
-    redirectUri: "https://auth.expo.io/@chiencse/smartRoom",
   });
 
   // Function to save token to AsyncStorage
@@ -173,14 +172,6 @@ const LoginScreen = () => {
       >
         <Text className="text-white text-center font-semibold text-lg">
           LOGIN
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        className="py-4 rounded-lg mt-4 bg-blue-500"
-        onPress={() => router.push("/temp")}
-      >
-        <Text className="text-white text-center font-semibold text-lg">
-          Route
         </Text>
       </TouchableOpacity>
 

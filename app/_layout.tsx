@@ -33,12 +33,16 @@ export default function RootLayout() {
       try {
         const token: any = await AsyncStorage.getItem("authToken");
         console.log("Token found:", token);
+        if (!token) {
+          setIsAuthenticated(false);
+          return;
+        }
         const decodedToken: any = jwtDecode(token);
         const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
 
         if (decodedToken.exp < currentTime) {
           // Token is expired, delete it
-          await AsyncStorage.removeItem("userToken");
+          await AsyncStorage.removeItem("authToken");
           console.log("Token expired and removed");
           setIsAuthenticated(false);
         }
