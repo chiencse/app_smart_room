@@ -3,9 +3,11 @@ import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import DashBoardScreen from "./dashboard";
 import ProfileScreen from "./profile";
+import AnalyticsScreen from "./analytics";
 
 const Tab = createBottomTabNavigator();
 
@@ -37,6 +39,15 @@ function RootLayout() {
                             size={24}
                             color={color}
                         />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Analytics"
+                component={AnalyticsScreen}
+                options={{
+                    tabBarIcon: ({ color }) => (
+                        <MaterialCommunityIcons name="google-analytics" size={24} color={color} />
                     ),
                 }}
             />
