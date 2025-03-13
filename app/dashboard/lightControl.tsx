@@ -6,7 +6,6 @@ import {
     FlatList,
     StyleSheet,
     Switch,
-    ScrollView,
     TouchableOpacity,
 } from "react-native";
 import {
@@ -19,6 +18,7 @@ import Animated, {
     withSpring,
 } from "react-native-reanimated";
 
+import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
 type device = {
@@ -36,22 +36,27 @@ const DATA: device[] = [
     {
         id: "124",
         name: "Light 2",
-        value: 50,
+        value: 0,
     },
     {
         id: "125",
-        name: "Light 2",
-        value: 50,
+        name: "Light 3",
+        value: 60,
     },
     {
         id: "126",
-        name: "Light 2",
-        value: 50,
+        name: "Light 4",
+        value: 30,
     },
     {
-        id: "125",
-        name: "Light 2",
-        value: 50,
+        id: "127",
+        name: "Light 5",
+        value: 30,
+    },
+    {
+        id: "128",
+        name: "Light 6",
+        value: 30,
     },
 ];
 
@@ -120,6 +125,14 @@ const LightControlScreen = () => {
         <View
             style={{ backgroundColor: "white", width: width, height: height }}
         >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10}}>
+                <Text style={{paddingLeft: 10, fontSize: 16,}}>
+                    Number of devices: {devices.length}
+                </Text>
+                <TouchableOpacity>
+                    <Ionicons name="add-circle" size={28} color="black" />
+                </TouchableOpacity>
+            </View>
             <View style={{ height: height / 3 }}>
                 <FlatList
                     data={devices}
@@ -168,6 +181,9 @@ const LightControlScreen = () => {
                     contentContainerStyle={styles.flatlist}
                 />
             </View>
+            <Text style={{paddingTop: 20,paddingLeft: 20, fontSize: 18, fontWeight: 'bold'}}>
+                {devices.filter((device) => device.id === selectedDevice)[0]?.name}
+            </Text>
             <GestureHandlerRootView
                 style={{ flexGrow: 1, justifyContent: "center" }}
             >
