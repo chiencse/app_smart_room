@@ -90,9 +90,7 @@ const LightControlScreen = () => {
     };
 
     const getDeviceValue = (id: string) => {
-        return devices.length != 0
-            ? devices.filter((device) => device.id === id)[0].value
-            : 0;
+        return devices.find((device) => device.id === id)?.value ?? 0
     };
 
     const setDeviceValue = (id: string, value: number) => {
@@ -182,7 +180,7 @@ const LightControlScreen = () => {
                 />
             </View>
             <Text style={{paddingTop: 20,paddingLeft: 20, fontSize: 18, fontWeight: 'bold'}}>
-                {devices.filter((device) => device.id === selectedDevice)[0]?.name}
+                {devices.find((device) => device.id === selectedDevice)?.name}
             </Text>
             <GestureHandlerRootView
                 style={{ flexGrow: 1, justifyContent: "center" }}
