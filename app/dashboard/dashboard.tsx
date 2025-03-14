@@ -32,8 +32,12 @@ const DashBoardScreen = () => {
   });
 
   const fetchEnvInfo = async () => {
-    const envInfoFetch: any = await DataService.getEnvInfo();
-    setEnvInfo(envInfoFetch);
+    try {
+      const envInfoFetch: any = await DataService.getEnvInfo();
+      setEnvInfo(envInfoFetch);
+    } catch(error) {
+      console.error(error);
+    }
   };
 
   useLayoutEffect(() => {
@@ -50,7 +54,7 @@ const DashBoardScreen = () => {
     // Auto update enviroment info
     const idInterval = setInterval(() => {
       fetchEnvInfo()
-    }, 5000);
+    }, 2000);
 
     return () => {
       clearInterval(idInterval);

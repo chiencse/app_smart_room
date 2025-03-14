@@ -7,11 +7,26 @@ type EnvInfoCardProps = {
 }
 
 const EnvInfoCard = ({ envName, value, children}: PropsWithChildren<EnvInfoCardProps>) => {
+    const unitEnv = (envName: string) => {
+        switch(envName) {
+            case 'Temperature':
+                return 'ᵒC';
+            case 'Humidity':
+                return '%';
+            case 'Brightness':
+                return '%';
+            case 'Air Quality':
+                return '';
+            default:
+                return '';
+        }
+    }
+    
     return (
         <View style={styles.item}>
             {children}
             <Text style={styles.name}>{envName}</Text>
-            <Text style={styles.value}>{value}</Text>
+            <Text style={styles.value}>{value + unitEnv(envName)}</Text>
         </View>
     );
 };
