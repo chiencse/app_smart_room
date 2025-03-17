@@ -22,8 +22,8 @@ const LoginScreen = () => {
   const [error, setError] = useState("");
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    androidClientId: process.env.ANDROID_CLIENT_ID || "",
-    webClientId: process.env.WEB_CLIENT_ID || "",
+    androidClientId: process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "",
+    webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || "",
     scopes: ["profile", "email"],
   });
 
@@ -45,45 +45,47 @@ const LoginScreen = () => {
 
   // Handle Username/Password Login
   const handleLogin = async () => {
-    setError(""); // Reset error state
-    if (!username || !password) {
-      setError("Both fields are required!");
-      return;
-    }
+    Alert.alert("Login Successful", `Welcome, ${username}!`);
+    router.push("/home");
+    // setError(""); // Reset error state
+    // if (!username || !password) {
+    //   setError("Both fields are required!");
+    //   return;
+    // }
 
-    if (!isValidUsername(username)) {
-      setError(
-        "Invalid username format! Use 3-20 characters (letters, numbers, _, -)"
-      );
-      return;
-    }
+    // if (!isValidUsername(username)) {
+    //   setError(
+    //     "Invalid username format! Use 3-20 characters (letters, numbers, _, -)"
+    //   );
+    //   return;
+    // }
 
-    try {
-      const response = await fetch(`${config.BACKEND_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
+    // try {
+    //   const response = await fetch(`${config.BACKEND_URL}/auth/login`, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({ username, password }),
+    //   });
 
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
+    //   if (!response.ok) {
+    //     throw new Error("Login failed");
+    //   }
 
-      const data = await response.json();
-      console.log(data);
-      const token = data?.data?.token;
-      if (token) {
-        await saveToken(token); // Save the token
-        Alert.alert("Login Successful", `Welcome, ${username}!`);
-        router.push("/home");
-      } else {
-        throw new Error("No token received from server");
-      }
-    } catch (error) {
-      setError("Login failed. Please check your credentials." + error);
-    }
+    //   const data = await response.json();
+    //   console.log(data);
+    //   const token = data?.data?.token;
+    //   if (token) {
+    //     await saveToken(token); // Save the token
+    //     Alert.alert("Login Successful", `Welcome, ${username}!`);
+    //     router.push("/home");
+    //   } else {
+    //     throw new Error("No token received from server");
+    //   }
+    // } catch (error) {
+    //   setError("Login failed. Please check your credentials." + error);
+    // }
   };
 
   // Handle Google Login
