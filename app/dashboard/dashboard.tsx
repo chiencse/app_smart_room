@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
@@ -10,7 +10,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DeviceCard from "../../components/DeviceCard";
 import EnvInfoCard from "../../components/EnvInfoCard";
 
-import DataService from "../../services/DataService";
+import fetchData from "@/utils/fetchData";
 
 
 const DashBoardScreen = () => {
@@ -33,14 +33,14 @@ const DashBoardScreen = () => {
 
   const fetchEnvInfo = async () => {
     try {
-      const envInfoFetch: any = await DataService.getEnvInfo();
+      const envInfoFetch: any = await fetchData.getEnvInfo();
       setEnvInfo(envInfoFetch);
     } catch(error) {
       console.error(error);
     }
   };
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     fetchEnvInfo()
 
 		//call API

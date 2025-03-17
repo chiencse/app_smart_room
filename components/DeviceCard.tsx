@@ -16,7 +16,7 @@ const DeviceCard = ({
     
 
     return (
-        <TouchableOpacity style={styles.item} onPress={() => navigation.navigate(deviceName)}>
+        <TouchableOpacity style={styles.item} onPress={() => navigation.navigate(deviceName.toLowerCase())}>
             <View style={{ flex: 1 }}>
                 {children}
                 <Text style={styles.name}>{deviceName}</Text>

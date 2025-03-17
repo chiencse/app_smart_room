@@ -1,12 +1,11 @@
 import axios from 'axios';
 
-
 const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
   timeout: 2000,
 })
 
-const DataService = {
+const fetchData = {
   getEnvInfo: async () => {
     try {
       const response = await api.get('/api/adafruit/feeds')
@@ -17,11 +16,11 @@ const DataService = {
         airQuality: response.data.find((item: any) => item.name === "Air").last_value ?? 0,
       }
       return data;
-    } catch(error) {
-      console.error('Faild to get environment information');
+    } catch(error: any) {
+      throw new Error(error);
     }
   },
 
 };
 
-export default DataService;
+export default fetchData;
