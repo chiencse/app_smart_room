@@ -1,26 +1,44 @@
-import axios from 'axios';
+import axios from "axios";
+import config from "@/constants/ConfigEnv";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  baseURL: config.BACKEND_URL,
   timeout: 2000,
-})
+});
+
+const getToken = async () => {
+  const token = await AsyncStorage.getItem("authToken");
+  return token;
+};
 
 const fetchData = {
   getEnvInfo: async () => {
     try {
-      const response = await api.get('/api/adafruit/feeds')
+      const response = await api.get("/api/adafruit/feeds", {
+        headers: {
+          Authorization: "Bearer " + await getToken(),
+        },
+      });
       const data = {
-        temperature: response.data.find((item: any) => item.name === "Temp").last_value ?? 0,
-        humidity: response.data.find((item: any) => item.name === "Humidity").last_value ?? 0,
-        brightness: response.data.find((item: any) => item.name === "Light").last_value ?? 0,
-        airQuality: response.data.find((item: any) => item.name === "Air").last_value ?? 0,
-      }
+        temperature:
+          response.data.find((item: any) => item.name === "Temp").last_value ??
+          0,
+        humidity:
+          response.data.find((item: any) => item.name === "Humidity")
+            .last_value ?? 0,
+        brightness:
+          response.data.find((item: any) => item.name === "Light").last_value ??
+          0,
+        airQuality:
+          response.data.find((item: any) => item.name === "Air").last_value ??
+          0,
+      };
       return data;
-    } catch(error: any) {
+    } catch (error: any) {
       throw new Error(error);
     }
   },
-
 };
 
 export default fetchData;
