@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
-import { useEffect, useState } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -11,7 +11,6 @@ import DeviceCard from "../../components/DeviceCard";
 import EnvInfoCard from "../../components/EnvInfoCard";
 
 import fetchData from "@/utils/fetchData";
-
 
 const DashBoardScreen = () => {
   const { width, height } = Dimensions.get("window");
@@ -35,31 +34,33 @@ const DashBoardScreen = () => {
     try {
       const envInfoFetch: any = await fetchData.getEnvInfo();
       setEnvInfo(envInfoFetch);
-    } catch(error) {
+    } catch (error) {
       console.error(error);
     }
   };
 
-  useEffect(() => {
-    fetchEnvInfo()
+  useFocusEffect(
+    useCallback(() => {
+      fetchEnvInfo();
 
-		//call API
-    setNumDevice({
-      ...numDevice,
-      light: 3,
-      door: 1,
-      fan: 2,
-    });
+      //call API
+      setNumDevice({
+        ...numDevice,
+        light: 3,
+        door: 1,
+        fan: 2,
+      });
 
-    // Auto update enviroment info
-    const idInterval = setInterval(() => {
-      fetchEnvInfo()
-    }, 2000);
+      // Auto update enviroment info
+      const idInterval = setInterval(() => {
+        fetchEnvInfo();
+      }, 2000);
 
-    return () => {
-      clearInterval(idInterval);
-    };
-  }, []);
+      return () => {
+        clearInterval(idInterval);
+      };
+    }, [])
+  );
 
   return (
     <View style={{ backgroundColor: "white", width: width, height: height }}>
@@ -160,6 +161,7 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
+    marginTop: 30,
     fontSize: 24,
     fontWeight: 600,
   },
