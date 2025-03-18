@@ -36,9 +36,26 @@ const fetchData = {
       };
       return data;
     } catch (error: any) {
-      throw new Error(error);
+      throw new Error(error.message);
     }
   },
+
+  getUserInfo: async () => {
+    try {
+      const response = await api.get("/api/user/info", {
+        headers: {
+          Authorization: "Bearer " + await getToken(),
+        },
+      });
+      return {
+        username: response.data.data.username,
+        email: response.data.data.email,
+        phoneNumber: response.data.data.phoneNumber,
+      }
+    } catch(error: any) {
+      throw new Error(error.message);
+    }
+  }
 };
 
 export default fetchData;
