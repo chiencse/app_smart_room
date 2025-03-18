@@ -125,6 +125,10 @@ const LoginScreen = () => {
     }
   };
 
+  const redirectRegister = () => {
+    router.push("/register");
+  }
+
   return (
     <View className="flex-1 bg-white px-6 justify-center">
       {/* Logo */}
@@ -185,6 +189,16 @@ const LoginScreen = () => {
           LOGIN WITH GOOGLE
         </Text>
       </TouchableOpacity>
+      <View className="flex-row justify-center mt-4">
+        <Text className="text-base text-gray-700">
+            Not have an account?{' '}
+          </Text>
+        <TouchableOpacity onPress={redirectRegister}>
+          <Text className="text-blue-500 text-base">
+            Register now
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

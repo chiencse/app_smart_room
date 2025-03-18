@@ -86,6 +86,7 @@ export default function RootLayout() {
     <ThemeProvider value={DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login/index" />
+        <Stack.Screen name="register/index" />
         <Stack.Screen name="home/index" />
         <Stack.Screen name="+not-found" />
       </Stack>

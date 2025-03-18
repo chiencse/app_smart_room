@@ -8,9 +8,9 @@ const Stack = createNativeStackNavigator();
 
 const DashboardNavigator = () => {
   return (
-    <Stack.Navigator initialRouteName="home">
+    <Stack.Navigator initialRouteName=" ">
       <Stack.Screen
-        name="home"
+        name=" "
         component={DashBoardScreen}
         options={{
           title: "Dashboard",
