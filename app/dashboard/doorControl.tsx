@@ -13,22 +13,22 @@ import fetchData from "@/utils/fetchData";
 import { useFocusEffect } from "@react-navigation/native";
 import controlDevice from "@/utils/controlDevice";
 
-const LightControlScreen = () => {
+const DoorControlScreen = () => {
   const { width, height } = Dimensions.get("window");
 
   const [deviceStatus, setDeviceStatus] = useState<string>("OFF");
-  const [autoMode, setAutoMode] = useState<string>("Manual");
+  // const [autoMode, setAutoMode] = useState<string>("Manual");
   const [isLoading, setIsLoading] = useState(true);
 
   const [idInterval, setIdInterval] = useState<NodeJS.Timeout | null>(null);
 
   const getData = async () => {
     fetchData
-      .getDeviceInfo("device.lamp")
+      .getDeviceInfo("device.door")
       .then((data) => setDeviceStatus(data));
-    fetchData
-      .getDeviceInfo("device.status-lamp")
-      .then((data) => setAutoMode(data));
+    // fetchData
+    //   .getDeviceInfo("device.status-door")
+    //   .then((data) => setAutoMode(data));
   };
 
   useFocusEffect(
@@ -46,21 +46,11 @@ const LightControlScreen = () => {
           if (idInterval) {
             clearInterval(idInterval);
           }
-          setIsLoading(true);
+          setIsLoading(true)
         };
       }
     }, [isLoading])
   );
-
-  const toggleAutoMode = async (value: string) => {
-    if (idInterval) {
-      clearInterval(idInterval);
-      setIdInterval(null);
-    }
-    setAutoMode(value);
-    await controlDevice.control("device.status-lamp", value);
-    setIsLoading(true);
-  };
 
   const toggleDevice = async (value: string) => {
     if (idInterval) {
@@ -68,53 +58,18 @@ const LightControlScreen = () => {
       setIdInterval(null);
     }
     setDeviceStatus(value);
-    await controlDevice.control("device.lamp", value);
+    await controlDevice.control("device.door", value);
     setIsLoading(true);
   };
 
   return (
     <View style={{ backgroundColor: "white", width: width, height: height }}>
-      <View style={{ height: 100, margin: 10 }}>
-        <View
-          style={{
-            ...styles.item,
-            borderColor: "#F7F7F7",
-          }}
-        >
-          <View style={{ flex: 1 }}>
-            <MaterialIcons
-              name="brightness-auto"
-              size={26}
-              color="black"
-              style={styles.icon}
-            />
-            <Text style={styles.name}>Automation mode</Text>
-          </View>
-          <Switch
-            trackColor={{
-              false: "#101010",
-              true: "#34E0A1",
-            }}
-            thumbColor={"#FFFFFF"}
-            onValueChange={(value) => toggleAutoMode(value ? "Auto" : "Manual")}
-            value={autoMode === "Auto"}
-            style={styles.toggle}
-          ></Switch>
-        </View>
-      </View>
-
       <View style={styles.toggleContainer}>
         <TouchableOpacity
           style={{
             ...styles.toggleButton,
-            backgroundColor:
-              autoMode === "Auto"
-                ? "#ececec"
-                : deviceStatus === "ON"
-                ? "#34E0A1"
-                : "#ee293a",
+            backgroundColor: deviceStatus === "ON" ? "#34E0A1" : "#ee293a",
           }}
-          disabled={autoMode === "Auto"}
           onPress={() => toggleDevice(deviceStatus === "ON" ? "OFF" : "ON")}
         >
           <Text style={styles.buttonText}>
@@ -127,39 +82,6 @@ const LightControlScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  flatlist: {
-    margin: 10,
-  },
-
-  item: {
-    flexDirection: "row",
-    backgroundColor: "#F7F7F7",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderRadius: 15,
-    flex: 1,
-    flexWrap: "wrap",
-    margin: 5,
-    borderWidth: 2,
-  },
-
-  name: {
-    paddingLeft: 10,
-    fontSize: 16,
-    fontWeight: 500,
-    flex: 1,
-  },
-
-  icon: {
-    padding: 10,
-  },
-
-  value: {
-    paddingLeft: 10,
-    paddingBottom: 10,
-    paddingTop: 5,
-  },
-
   toggle: {
     alignSelf: "flex-start",
   },
@@ -193,4 +115,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LightControlScreen;
+export default DoorControlScreen;

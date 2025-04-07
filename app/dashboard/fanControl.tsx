@@ -11,6 +11,7 @@ import {
 import {
   GestureHandlerRootView,
   PanGestureHandler,
+  State,
 } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
@@ -18,68 +19,84 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-import Ionicons from "@expo/vector-icons/Ionicons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import fetchData from "@/utils/fetchData";
-import { useFocusEffect } from "@react-navigation/native";
-import controlDevice from './../../utils/controlDevice';
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import controlDevice from "./../../utils/controlDevice";
 
 const FanControlScreen = () => {
   const { width, height } = Dimensions.get("window");
+  const navigation = useNavigation();
 
-  const [devices, setDevice] = useState<any[]>([]);
+  const [deviceStatus, setDeviceStatus] = useState<number>(0);
+  const [autoMode, setAutoMode] = useState<string>("Manual");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [selectedDevice, setSelectedDevice] = useState<string>("");
+  const [idInterval, setIdInterval] = useState<NodeJS.Timeout | null>(null);
 
   const getData = async () => {
-    const data = await fetchData.getDeviceInfo("Fan", "device.fan");
-    setDevice([data]);
-    setSelectedDevice(devices[0].id);
+    fetchData.getDeviceInfo("device.fan").then((data) => setDeviceStatus(data));
+    fetchData
+      .getDeviceInfo("device.status-fan")
+      .then((data) => setAutoMode(data));
   };
 
   useFocusEffect(
     useCallback(() => {
-      getData();
-    }, [])
+      if (isLoading) {
+        setIdInterval(
+          setInterval(() => {
+            getData();
+          }, 2000)
+        );
+
+        setIsLoading(false);
+      } else {
+        return () => {
+          if (idInterval) {
+            clearInterval(idInterval);
+          }
+          setIsLoading(true);
+        };
+      }
+    }, [isLoading])
   );
 
-  const selectDevice = (id: string) => {
-    setSelectedDevice(id);
+  const toggleAutoMode = async (value: string) => {
+    if (idInterval) {
+      clearInterval(idInterval);
+      setIdInterval(null);
+    }
+    setAutoMode(value);
+    await controlDevice.control("device.status-fan", value);
+    setIsLoading(true);
   };
 
-  const toogleDevice = (id: string, value: boolean) => {
-    setDevice((pre) =>
-      pre.map((device) =>
-        device.id === id ? { ...device, value: value ? 50 : 0 } : device
-      )
-    );
-    // call API to update db
-  };
-
-  const getDeviceValue = (id: string) => {
-    return devices.find((device) => device.id === id)?.value ?? 0;
-  };
-
-  const setDeviceValue = (id: string, value: number) => {
-    // controlDevice.control('device.fan', String(value));
-    setDevice((pre) =>
-      pre.map((device) =>
-        device.id === id ? { ...device, value: value } : device
-      )
-    );
-  };
-
-  const translateY = useSharedValue(100 - getDeviceValue(selectedDevice));
+  const translateY = useSharedValue(100 - deviceStatus);
 
   useEffect(() => {
-    translateY.value = withSpring(100 - getDeviceValue(selectedDevice));
-  }, [devices, selectedDevice]);
+    translateY.value = withSpring(100 - deviceStatus);
+  }, [deviceStatus]);
 
   const control = (event: any) => {
-    let newValue = 100 - event.nativeEvent.translationY;
+    if (autoMode == "Auto") return;
+
+    if (idInterval) {
+      clearInterval(idInterval);
+      setIdInterval(null);
+    }
+    let newValue = 100 - (event.nativeEvent.y / 200) * 100;
     newValue = Math.max(0, Math.min(100, newValue));
     translateY.value = withSpring(100 - newValue);
-    setDeviceValue(selectedDevice, Math.round(newValue));
+    setDeviceStatus(Math.round(newValue));
+  };
+
+  const onHandlerStateChange = async (event: any) => {
+    if (event.nativeEvent.state === State.END) {
+      if (autoMode == "Auto") return;
+      await controlDevice.control("device.fan", String(deviceStatus));
+      setIsLoading(true);
+    }
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -88,85 +105,58 @@ const FanControlScreen = () => {
 
   return (
     <View style={{ backgroundColor: "white", width: width, height: height }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: 10,
-        }}
-      >
-        <Text style={{ paddingLeft: 10, fontSize: 16 }}>
-          Number of devices: {devices.length}
-        </Text>
-        <TouchableOpacity>
-          <Ionicons name="add-circle" size={28} color="black" />
-        </TouchableOpacity>
-      </View>
-      <View style={{ height: height / 3 }}>
-        <FlatList
-          data={devices}
-          numColumns={2}
-          initialNumToRender={6}
-          scrollEnabled={true}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={{
-                ...styles.item,
-                borderColor: selectedDevice == item.id ? "#34E0A1" : "#F7F7F7",
-              }}
-              onPress={() => selectDevice(item.id)}
-            >
-              <View style={{ flex: 1 }}>
-                <FontAwesome6
-                  name="fan"
-                  size={26}
-                  color="black"
-                  style={styles.icon}
-                />
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.value}>Power: {item.value}%</Text>
-              </View>
-              <Switch
-                trackColor={{
-                  false: "#101010",
-                  true: "#34E0A1",
-                }}
-                thumbColor={"#FFFFFF"}
-                onValueChange={(value) => toogleDevice(item.id, value)}
-                value={item.value != 0}
-                style={styles.toogle}
-              ></Switch>
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item.id}
-          extraData={selectedDevice}
-          contentContainerStyle={styles.flatlist}
-        />
-      </View>
-      <Text
-        style={{
-          paddingTop: 20,
-          paddingLeft: 20,
-          fontSize: 18,
-          fontWeight: "bold",
-        }}
-      >
-        {devices.find((device) => device.id === selectedDevice)?.name}
-      </Text>
-      <GestureHandlerRootView style={{ flexGrow: 1, justifyContent: "center" }}>
-        <PanGestureHandler onGestureEvent={control}>
-          <View style={styles.sliderContainer}>
-            <View style={styles.sliderBackground}>
-              <Animated.View style={[styles.fill, animatedStyle]}>
-                <Text style={styles.text}>
-                  {getDeviceValue(selectedDevice)}%
-                </Text>
-              </Animated.View>
-            </View>
+      <View style={{ height: 100, margin: 10 }}>
+        <View
+          style={{
+            ...styles.item,
+            borderColor: "#F7F7F7",
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <MaterialIcons
+              name="brightness-auto"
+              size={26}
+              color="black"
+              style={styles.icon}
+            />
+            <Text style={styles.name}>Automation mode</Text>
           </View>
-        </PanGestureHandler>
-      </GestureHandlerRootView>
+          <Switch
+            trackColor={{
+              false: "#101010",
+              true: "#34E0A1",
+            }}
+            thumbColor={"#FFFFFF"}
+            onValueChange={(value) => toggleAutoMode(value ? "Auto" : "Manual")}
+            value={autoMode === "Auto"}
+            style={styles.toggle}
+          ></Switch>
+        </View>
+      </View>
+
+      <View style={{ flexGrow: 1 }}>
+        <GestureHandlerRootView
+          style={{ flexGrow: 1, justifyContent: "center" }}
+        >
+          <PanGestureHandler
+            onGestureEvent={control}
+            onHandlerStateChange={onHandlerStateChange}
+          >
+            <View style={styles.sliderContainer}>
+              <View style={styles.sliderBackground}>
+                <Animated.View
+                  style={[
+                    { ...styles.fill, backgroundColor: autoMode == "Auto" ? "#aaa" :"#34E0A1" },
+                    animatedStyle,
+                  ]}
+                >
+                  <Text style={styles.text}>{deviceStatus}%</Text>
+                </Animated.View>
+              </View>
+            </View>
+          </PanGestureHandler>
+        </GestureHandlerRootView>
+      </View>
     </View>
   );
 };
@@ -205,8 +195,14 @@ const styles = StyleSheet.create({
     paddingTop: 5,
   },
 
-  toogle: {
+  toggle: {
     alignSelf: "flex-start",
+  },
+
+  toggleContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   sliderContainer: {
@@ -223,7 +219,6 @@ const styles = StyleSheet.create({
   },
 
   fill: {
-    backgroundColor: "#34E0A1",
     alignItems: "center",
     justifyContent: "center",
     width: "100%",

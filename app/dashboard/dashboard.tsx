@@ -52,9 +52,6 @@ const DashBoardScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchInfomation();
-
-      // Auto update enviroment info
       const idInterval = setInterval(() => {
         fetchInfomation();
       }, 2000);
