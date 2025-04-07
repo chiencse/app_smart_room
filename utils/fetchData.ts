@@ -17,7 +17,7 @@ const fetchData = {
     try {
       const response = await api.get("/api/adafruit/feeds", {
         headers: {
-          Authorization: "Bearer " + await getToken(),
+          Authorization: "Bearer " + (await getToken()),
         },
       });
       const data = {
@@ -44,18 +44,116 @@ const fetchData = {
     try {
       const response = await api.get("/api/user/info", {
         headers: {
-          Authorization: "Bearer " + await getToken(),
+          Authorization: "Bearer " + (await getToken()),
         },
       });
       return {
         username: response.data.data.username,
         email: response.data.data.email,
         phoneNumber: response.data.data.phoneNumber,
-      }
-    } catch(error: any) {
+      };
+    } catch (error: any) {
       throw new Error(error.message);
     }
-  }
+  },
+
+  getStrategies: async () => {
+    try {
+      const response = await api.get("/api/devices/strategy", {
+        headers: {
+          Authorization: "Bearer " + (await getToken()),
+        },
+      });
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  },
+
+  getDevices: async () => {
+    try {
+      const response = await api.get("/api/devices", {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch devices"
+      );
+    }
+  },
+
+  createStrategy: async (strategyData: {
+    name: string;
+    description: string;
+    status: string;
+    startTime: string;
+    listDeviceValues: Array<{
+      deviceId: number;
+      value: string;
+    }>;
+  }) => {
+    try {
+      const response = await api.post("/api/devices/strategy", strategyData, {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to create strategy"
+      );
+    }
+  },
+
+  updateStrategy: async (
+    strategyId: number,
+    strategyData: {
+      name: string;
+      description: string;
+      status: string;
+      startTime: string;
+      listDeviceValues: Array<{
+        deviceId: number;
+        value: string;
+      }>;
+    }
+  ) => {
+    try {
+      const response = await api.put(
+        `/api/devices/strategy/${strategyId}`,
+        strategyData,
+        {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update strategy"
+      );
+    }
+  },
+
+  deleteStrategy: async (strategyId: number) => {
+    try {
+      const response = await api.delete(`/api/devices/strategy/${strategyId}`, {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete strategy"
+      );
+    }
+  },
 };
 
 export default fetchData;
