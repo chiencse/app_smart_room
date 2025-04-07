@@ -24,16 +24,27 @@ const DashBoardScreen = () => {
     airQuality: 0,
   });
 
-  const [numDevice, setNumDevice] = useState({
-    light: 0,
-    door: 0,
+  const [statusDevice, setStatusDevice] = useState({
+    light: 'OFF',
+    door: 'OFF',
     fan: 0,
   });
 
-  const fetchEnvInfo = async () => {
+  const fetchInfomation = async () => {
     try {
-      const envInfoFetch: any = await fetchData.getEnvInfo();
-      setEnvInfo(envInfoFetch);
+      const data: any = await fetchData.getInfo();
+      setEnvInfo({
+        temperature: data.temperature,
+        humidity: data.humidity,
+        brightness: data.brightness,
+        airQuality: data.airQuality,
+      });
+
+      setStatusDevice({
+        light: data.light,
+        door: data.door,
+        fan: data.fan,
+      });
     } catch (error) {
       console.error(error);
     }
@@ -41,19 +52,11 @@ const DashBoardScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchEnvInfo();
-
-      //call API
-      setNumDevice({
-        ...numDevice,
-        light: 3,
-        door: 1,
-        fan: 2,
-      });
+      fetchInfomation();
 
       // Auto update enviroment info
       const idInterval = setInterval(() => {
-        fetchEnvInfo();
+        fetchInfomation();
       }, 2000);
 
       return () => {
@@ -109,7 +112,7 @@ const DashBoardScreen = () => {
           <View style={styles.rowItem}>
             <DeviceCard
               deviceName="Light"
-              numDevice={numDevice.light}
+              statusDevice={statusDevice.light}
               navigation={navigation}
             >
               <FontAwesome6
@@ -121,7 +124,7 @@ const DashBoardScreen = () => {
             </DeviceCard>
             <DeviceCard
               deviceName="Door"
-              numDevice={numDevice.door}
+              statusDevice={statusDevice.door}
               navigation={navigation}
             >
               <FontAwesome6
@@ -135,7 +138,7 @@ const DashBoardScreen = () => {
           <View style={styles.rowItem}>
             <DeviceCard
               deviceName="Fan"
-              numDevice={numDevice.fan}
+              statusDevice={statusDevice.fan}
               navigation={navigation}
             >
               <FontAwesome6

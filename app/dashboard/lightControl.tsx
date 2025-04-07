@@ -1,267 +1,206 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
-    Dimensions,
-    View,
-    Text,
-    FlatList,
-    StyleSheet,
-    Switch,
-    TouchableOpacity,
+  Dimensions,
+  View,
+  Text,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
 } from "react-native";
-import {
-    GestureHandlerRootView,
-    PanGestureHandler,
-} from "react-native-gesture-handler";
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withSpring,
-} from "react-native-reanimated";
 
-import Ionicons from '@expo/vector-icons/Ionicons';
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-
-type device = {
-    id: string;
-    name: string;
-    value: number;
-};
-
-const DATA: device[] = [
-    {
-        id: "123",
-        name: "Light 1",
-        value: 50,
-    },
-    {
-        id: "124",
-        name: "Light 2",
-        value: 0,
-    },
-    {
-        id: "125",
-        name: "Light 3",
-        value: 60,
-    },
-    {
-        id: "126",
-        name: "Light 4",
-        value: 30,
-    },
-    {
-        id: "127",
-        name: "Light 5",
-        value: 30,
-    },
-    {
-        id: "128",
-        name: "Light 6",
-        value: 30,
-    },
-];
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import fetchData from "@/utils/fetchData";
+import { useFocusEffect } from "@react-navigation/native";
+import controlDevice from "@/utils/controlDevice";
 
 const LightControlScreen = () => {
-    const { width, height } = Dimensions.get("window");
+  const { width, height } = Dimensions.get("window");
 
-    const [devices, setDevice] = useState<device[]>([]);
+  const [deviceStatus, setDeviceStatus] = useState<string>("OFF");
+  const [autoMode, setAutoMode] = useState<string>("Manual");
+  const [isLoading, setIsLoading] = useState(true);
 
-    const [selectedDevice, setSelectedDevice] = useState<string>("");
+  const [idInterval, setIdInterval] = useState<NodeJS.Timeout>();
 
-    useLayoutEffect(() => {
-        // call API
-        setDevice(DATA);
-    }, []);
+  const getData = async () => {
+    fetchData
+      .getDeviceInfo("device.lamp")
+      .then((data) => setDeviceStatus(data));
+    fetchData
+      .getDeviceInfo("device.status-lamp")
+      .then((data) => setAutoMode(data));
+  };
 
-    useEffect(() => {
-        setSelectedDevice(DATA[0].id);
-    }, []);
+  useFocusEffect(
+    useCallback(() => {
+      if (isLoading) {
+        getData();
 
-    const selectDevice = (id: string) => {
-        setSelectedDevice(id);
-    };
-
-    const toogleDevice = (id: string, value: boolean) => {
-        setDevice((pre) =>
-            pre.map((device) =>
-                device.id === id ? { ...device, value: value ? 50 : 0 } : device
-            )
+        setIdInterval(
+          setInterval(() => {
+            getData();
+          }, 2000)
         );
-        // call API to update db
-    };
 
-    const getDeviceValue = (id: string) => {
-        return devices.find((device) => device.id === id)?.value ?? 0
-    };
+        setIsLoading(false);
 
-    const setDeviceValue = (id: string, value: number) => {
-        //call API
-        setDevice((pre) =>
-            pre.map((device) =>
-                device.id === id ? { ...device, value: value } : device
-            )
-        );
-    };
+        return () => {
+          if (idInterval) {
+            clearInterval(idInterval);
+          }
+        };
+      }
+    }, [isLoading])
+  );
 
-    const translateY = useSharedValue(100 - getDeviceValue(selectedDevice));
+  const toggleAutoMode = async (value: string) => {
+    clearInterval(idInterval);
+    setAutoMode(value);
+    await controlDevice.control("device.status-lamp", value);
+    setIsLoading(true);
+  };
 
-    useEffect(() => {
-        translateY.value = withSpring(100 - getDeviceValue(selectedDevice));
-    }, [devices, selectedDevice]);
+  const toggleDevice = async (value: string) => {
+    clearInterval(idInterval);
+    setDeviceStatus(value);
+    await controlDevice.control("device.lamp", value);
+    setIsLoading(true);
+  };
 
-    const controlDevice = (event: any) => {
-        let newValue = 100 - event.nativeEvent.translationY;
-        newValue = Math.max(0, Math.min(100, newValue));
-        translateY.value = withSpring(100 - newValue);
-        setDeviceValue(selectedDevice, Math.round(newValue));
-    };
-
-    const animatedStyle = useAnimatedStyle(() => ({
-        height: `${Math.max(100 - translateY.value, 10)}%`,
-    }));
-
-    return (
+  return (
+    <View style={{ backgroundColor: "white", width: width, height: height }}>
+      {/* <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: 10,
+        }}
+      >
+        <Text style={{ paddingLeft: 10, fontSize: 16 }}>
+          Number of devices: {devices.length}
+        </Text>
+        <TouchableOpacity>
+          <Ionicons name="add-circle" size={28} color="black" />
+        </TouchableOpacity>
+      </View> */}
+      <View style={{ height: 100, margin: 10 }}>
         <View
-            style={{ backgroundColor: "white", width: width, height: height }}
+          style={{
+            ...styles.item,
+            borderColor: "#F7F7F7",
+          }}
         >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10}}>
-                <Text style={{paddingLeft: 10, fontSize: 16,}}>
-                    Number of devices: {devices.length}
-                </Text>
-                <TouchableOpacity>
-                    <Ionicons name="add-circle" size={28} color="black" />
-                </TouchableOpacity>
-            </View>
-            <View style={{ height: height / 3 }}>
-                <FlatList
-                    data={devices}
-                    numColumns={2}
-                    initialNumToRender={6}
-                    scrollEnabled={true}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={{
-                                ...styles.item,
-                                borderColor:
-                                    selectedDevice == item.id
-                                        ? "#34E0A1"
-                                        : "#F7F7F7",
-                            }}
-                            onPress={() => selectDevice(item.id)}
-                        >
-                            <View style={{ flex: 1 }}>
-                                <FontAwesome6
-                                    name="lightbulb"
-                                    size={26}
-                                    color="black"
-                                    style={styles.icon}
-                                />
-                                <Text style={styles.name}>{item.name}</Text>
-                                <Text style={styles.value}>
-                                    Brightness: {item.value}%
-                                </Text>
-                            </View>
-                            <Switch
-                                trackColor={{
-                                    false: "#101010",
-                                    true: "#34E0A1",
-                                }}
-                                thumbColor={"#FFFFFF"}
-                                onValueChange={(value) =>
-                                    toogleDevice(item.id, value)
-                                }
-                                value={item.value != 0}
-                                style={styles.toogle}
-                            ></Switch>
-                        </TouchableOpacity>
-                    )}
-                    keyExtractor={(item) => item.id}
-                    extraData={selectedDevice}
-                    contentContainerStyle={styles.flatlist}
-                />
-            </View>
-            <Text style={{paddingTop: 20,paddingLeft: 20, fontSize: 18, fontWeight: 'bold'}}>
-                {devices.find((device) => device.id === selectedDevice)?.name}
-            </Text>
-            <GestureHandlerRootView
-                style={{ flexGrow: 1, justifyContent: "center" }}
-            >
-                <PanGestureHandler onGestureEvent={controlDevice}>
-                    <View style={styles.sliderContainer}>
-                        <View style={styles.sliderBackground}>
-                            <Animated.View style={[styles.fill, animatedStyle]}>
-                                <Text style={styles.text}>
-                                    {getDeviceValue(selectedDevice)}%
-                                </Text>
-                            </Animated.View>
-                        </View>
-                    </View>
-                </PanGestureHandler>
-            </GestureHandlerRootView>
+          <View style={{ flex: 1 }}>
+            <MaterialIcons
+              name="brightness-auto"
+              size={26}
+              color="black"
+              style={styles.icon}
+            />
+            <Text style={styles.name}>Automation mode</Text>
+          </View>
+          <Switch
+            trackColor={{
+              false: "#101010",
+              true: "#34E0A1",
+            }}
+            thumbColor={"#FFFFFF"}
+            onValueChange={(value) => toggleAutoMode(value ? "Auto" : "Manual")}
+            value={autoMode === "Auto"}
+            style={styles.toggle}
+          ></Switch>
         </View>
-    );
+      </View>
+
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity
+          style={{
+            ...styles.toggleButton,
+            backgroundColor:
+              autoMode === "Auto"
+                ? "#ececec"
+                : deviceStatus === "ON"
+                ? "#34E0A1"
+                : "#fd0304",
+          }}
+          disabled={autoMode === "Auto"}
+          onPress={() => toggleDevice(deviceStatus === "ON" ? "OFF" : "ON")}
+        >
+          <Text style={styles.buttonText}>
+            {deviceStatus === "ON" ? "ON" : "OFF"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    flatlist: {
-        margin: 10,
-    },
+  flatlist: {
+    margin: 10,
+  },
 
-    item: {
-        flexDirection: "row",
-        backgroundColor: "#F7F7F7",
-        justifyContent: "space-between",
-        alignItems: "center",
-        borderRadius: 15,
-        flex: 1,
-        flexWrap: "wrap",
-        margin: 5,
-        borderWidth: 2,
-    },
+  item: {
+    flexDirection: "row",
+    backgroundColor: "#F7F7F7",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: 15,
+    flex: 1,
+    flexWrap: "wrap",
+    margin: 5,
+    borderWidth: 2,
+  },
 
-    name: {
-        paddingLeft: 10,
-        fontSize: 16,
-        fontWeight: 500,
-        flex: 1,
-    },
+  name: {
+    paddingLeft: 10,
+    fontSize: 16,
+    fontWeight: 500,
+    flex: 1,
+  },
 
-    icon: {
-        padding: 10,
-    },
+  icon: {
+    padding: 10,
+  },
 
-    value: {
-        paddingLeft: 10,
-        paddingBottom: 10,
-        paddingTop: 5,
-    },
+  value: {
+    paddingLeft: 10,
+    paddingBottom: 10,
+    paddingTop: 5,
+  },
 
-    toogle: {
-        alignSelf: "flex-start",
-    },
+  toggle: {
+    alignSelf: "flex-start",
+  },
 
-    sliderContainer: { 
-        alignItems: "center", 
-        height: 350 
-    },
+  toggleContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-    sliderBackground: {
-        width: 100,
-        height: 200,
-        backgroundColor: "#EEE",
-        borderRadius: 15,
-        overflow: "hidden",
+  toggleButton: {
+    width: 150,
+    height: 150,
+    borderRadius: "50%",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
     },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
+  },
 
-    fill: {
-        backgroundColor: "#34E0A1",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-        position: "absolute",
-        bottom: 0,
-    },
-
-    text: { fontSize: 16, fontWeight: "bold", color: "#000" },
+  buttonText: {
+    color: "white",
+    fontSize: 30,
+    fontWeight: "bold",
+  },
 });
 
 export default LightControlScreen;
