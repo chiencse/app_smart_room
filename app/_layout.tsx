@@ -88,6 +88,8 @@ export default function RootLayout() {
         <Stack.Screen name="login/index" />
         <Stack.Screen name="register/index" />
         <Stack.Screen name="home/index" />
+        <Stack.Screen name="profile" />
+        <Stack.Screen name="dashboard" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

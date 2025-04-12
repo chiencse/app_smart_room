@@ -1,6 +1,14 @@
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { router } from "expo-router";
 
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -50,16 +58,16 @@ const DashBoardScreen = () => {
     }
   };
 
+
   useFocusEffect(
     useCallback(() => {
       const idInterval = setInterval(() => {
         fetchInfomation();
       }, 2000);
-
-      return () => {
-        clearInterval(idInterval);
-      };
-    }, [])
+    return () => {
+      clearInterval(idInterval);
+    };
+  }, [])
   );
 
   return (
@@ -105,7 +113,16 @@ const DashBoardScreen = () => {
         </View>
 
         <View style={styles.group}>
-          <Text style={styles.groupName}>Device</Text>
+          <View style={styles.groupHeader}>
+            <Text style={styles.groupName}>Device</Text>
+            <TouchableOpacity
+              style={styles.strategyButton}
+              onPress={() => router.push("/dashboard/strategy")}
+            >
+              <MaterialIcons name="auto-fix-high" size={24} color="#34E0A1" />
+              <Text style={styles.strategyText}>Strategy</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.rowItem}>
             <DeviceCard
               deviceName="Light"
@@ -145,6 +162,7 @@ const DashBoardScreen = () => {
                 style={styles.icon}
               />
             </DeviceCard>
+            <View style={{ flex: 1 }} />
           </View>
         </View>
       </ScrollView>
@@ -189,6 +207,28 @@ const styles = StyleSheet.create({
 
   icon: {
     padding: 10,
+  },
+
+  groupHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 10,
+  },
+  strategyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f8f8",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#34E0A1",
+  },
+  strategyText: {
+    marginLeft: 8,
+    color: "#34E0A1",
+    fontWeight: "500",
   },
 });
 
