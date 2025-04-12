@@ -95,7 +95,7 @@ const RegisterScreen = () => {
   };
 
   const redirectLogin = () => {
-    router.push('/home');
+    router.push('/login');
   }
 
   return (

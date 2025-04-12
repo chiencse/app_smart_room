@@ -3,13 +3,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type DeviceCardProps = {
     deviceName: string;
-    numDevice: number;
+    statusDevice: string | number;
     navigation: any;
 };
 
 const DeviceCard = ({
     deviceName,
-    numDevice,
+    statusDevice,
     navigation,
     children,
 }: PropsWithChildren<DeviceCardProps>) => {
@@ -21,7 +21,7 @@ const DeviceCard = ({
                 {children}
                 <Text style={styles.name}>{deviceName}</Text>
                 <Text style={styles.numDevice}>
-                    {numDevice + (numDevice == 1 ? " Device" : " Devices")}
+                    {'Status: ' + statusDevice}
                 </Text>
             </View>
         </TouchableOpacity>

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import DashBoardScreen from "./dashboard";
 import FanControlScreen from "./fanControl";
 import LightControlScreen from "./lightControl";
+import DoorControlScreen from "./doorControl";
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,13 @@ const DashboardNavigator = () => {
         component={FanControlScreen}
         options={{
           title: "Fan control",
+        }}
+      />
+      <Stack.Screen
+        name="door"
+        component={DoorControlScreen}
+        options={{
+          title: "Door control",
         }}
       />
     </Stack.Navigator>

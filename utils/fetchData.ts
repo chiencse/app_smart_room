@@ -13,7 +13,7 @@ const getToken = async () => {
 };
 
 const fetchData = {
-  getEnvInfo: async () => {
+  getInfo: async () => {
     try {
       const response = await api.get("/api/adafruit/feeds", {
         headers: {
@@ -33,8 +33,30 @@ const fetchData = {
         airQuality:
           response.data.find((item: any) => item.name === "Air").last_value ??
           0,
+        light:
+          response.data.find((item: any) => item.name === "Lamp").last_value ??
+          "OFF",
+        door:
+          response.data.find((item: any) => item.name === "Door").last_value ??
+          "ON",
+        fan:
+          response.data.find((item: any) => item.name === "Fan").last_value ??
+          0,
       };
       return data;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  },
+
+  getDeviceInfo: async (deviceKey: String) => {
+    try {
+      const response = await api.get(`/api/adafruit/feeds/${deviceKey}`, {
+        headers: {
+          Authorization: "Bearer " + (await getToken()),
+        },
+      });
+      return response.data.value;
     } catch (error: any) {
       throw new Error(error.message);
     }
