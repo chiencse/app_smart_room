@@ -47,28 +47,28 @@ const DashBoardScreen = () => {
     }
   };
 
-  // useFocusEffect(
-  // useCallback(() => {
-  //   fetchEnvInfo();
+  useFocusEffect(
+    useCallback(() => {
+      fetchEnvInfo();
 
-  //   //call API
-  //   setNumDevice({
-  //     ...numDevice,
-  //     light: 3,
-  //     door: 1,
-  //     fan: 2,
-  //   });
+      //call API
+      setNumDevice({
+        ...numDevice,
+        light: 3,
+        door: 1,
+        fan: 2,
+      });
 
-  //   // Auto update enviroment info
-  //   const idInterval = setInterval(() => {
-  //     fetchEnvInfo();
-  //   });
+      // Auto update enviroment info
+      const idInterval = setInterval(() => {
+        fetchEnvInfo();
+      }, 5000);
 
-  //   return () => {
-  //     clearInterval(idInterval);
-  //   };
-  // }, [])
-  // );
+      return () => {
+        clearInterval(idInterval);
+      };
+    }, [])
+  );
 
   return (
     <View style={{ backgroundColor: "white", width: width, height: height }}>

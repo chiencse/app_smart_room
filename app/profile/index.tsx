@@ -10,6 +10,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -20,12 +21,9 @@ interface MenuItemProps {
 }
 
 const MenuItem = ({ icon, title, onPress }: MenuItemProps) => (
-  <TouchableOpacity onPress={onPress}>
-    <View style={styles.menuItem}>
-      <Ionicons name={icon} size={24} color="#666" />
-      <Text style={styles.menuItemText}>{title}</Text>
-      <Ionicons name="chevron-forward" size={24} color="#666" />
-    </View>
+  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+    <Ionicons name={icon} size={24} color="#666" />
+    <Text style={styles.menuItemText}>{title}</Text>
   </TouchableOpacity>
 );
 
@@ -47,9 +45,30 @@ const ProfileScreen = () => {
     }, [])
   );
 
-  const handleLogout = () => {
-    AsyncStorage.removeItem("authToken");
-    router.push("/login");
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("authToken");
+              router.replace("/login");
+            } catch (error) {
+              console.error("Error during logout:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   return (

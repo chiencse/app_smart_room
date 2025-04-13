@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 import "react-native-reanimated";
 import "../global.css";
+import { AppState } from "react-native";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import useRouteLogger from "@/hooks/useRouteLogger";
@@ -21,36 +22,39 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isAppReady, setIsAppReady] = useState(false); // Tracks full app readiness
+  const [isAppReady, setIsAppReady] = useState(false);
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
   const router = useRouter();
   const logger = useRouteLogger();
-  // Check authentication on mount
+
+  // Check authentication on mount and when the app comes to foreground
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token: any = await AsyncStorage.getItem("authToken");
-        console.log("Token found:", token);
+        const token = await AsyncStorage.getItem("authToken");
         if (!token) {
           setIsAuthenticated(false);
+          router.replace("/login");
           return;
         }
+
         const decodedToken: any = jwtDecode(token);
-        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+        const currentTime = Math.floor(Date.now() / 1000);
 
         if (decodedToken.exp < currentTime) {
-          // Token is expired, delete it
           await AsyncStorage.removeItem("authToken");
-          console.log("Token expired and removed");
           setIsAuthenticated(false);
+          router.replace("/login");
+          return;
         }
 
-        setIsAuthenticated(!!token);
+        setIsAuthenticated(true);
       } catch (error) {
         console.error("Error checking authentication:", error);
         setIsAuthenticated(false);
+        router.replace("/login");
       } finally {
         if (loaded) {
           SplashScreen.hideAsync();
@@ -59,15 +63,27 @@ export default function RootLayout() {
     };
 
     checkAuth();
-  }, [loaded]);
+
+    // Add event listener for app state changes
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        checkAuth();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [loaded, router]);
 
   // Handle navigation after the navigator is mounted
   useEffect(() => {
     if (isAppReady && isAuthenticated !== null) {
       if (isAuthenticated) {
         router.replace("/home");
+      } else {
+        router.replace("/login");
       }
-      // No redirect needed for login since it's the initial route
     }
   }, [isAppReady, isAuthenticated, router]);
 
@@ -79,7 +95,7 @@ export default function RootLayout() {
   }, [loaded, isAuthenticated]);
 
   if (!loaded || isAuthenticated === null) {
-    return null; // Show nothing until fonts and auth are ready
+    return null;
   }
 
   return (
