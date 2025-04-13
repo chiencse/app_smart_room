@@ -85,9 +85,17 @@ const StrategyScreen = () => {
     );
   };
 
-  const handleRunStrategy = (strategy: Strategy) => {
-    // TODO: Implement run strategy functionality
-    console.log("Running strategy:", strategy.name);
+  const handleRunStrategy = async (strategyId: number) => {
+    try {
+      await fetchData.runStrategy(strategyId);
+      await fetchStrategies();
+      Alert.alert("Success", "Strategy started successfully");
+    } catch (error) {
+      console.error("Error running strategy:", error);
+      Alert.alert("Error", "Failed to run strategy");
+    } finally {
+      Alert.alert("Success", "Strategy started successfully");
+    }
   };
 
   // Add focus effect to reload strategies when screen comes into focus
@@ -165,7 +173,7 @@ const StrategyScreen = () => {
               <View style={styles.strategyActions}>
                 <TouchableOpacity
                   style={styles.runButton}
-                  onPress={() => handleRunStrategy(strategy)}
+                  onPress={() => handleRunStrategy(strategy.id)}
                 >
                   <Ionicons name="play" size={20} color="#fff" />
                   <Text style={styles.runButtonText}>Run</Text>

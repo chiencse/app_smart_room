@@ -1,6 +1,7 @@
 import axios from "axios";
 import config from "@/constants/ConfigEnv";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 
 const api = axios.create({
   baseURL: config.BACKEND_URL,
@@ -12,14 +13,50 @@ const getToken = async () => {
   return token;
 };
 
+// Add request interceptor
+api.interceptors.request.use(
+  async (config) => {
+    const token = await getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If the error status is 401 and there's no originalRequest._retry flag,
+    // it means the token has expired or is invalid
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      // Remove the invalid token
+      await AsyncStorage.removeItem("authToken");
+
+      // Redirect to login screen
+      router.replace("/login");
+
+      return Promise.reject(error);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 const fetchData = {
   getInfo: async () => {
     try {
-      const response = await api.get("/api/adafruit/feeds", {
-        headers: {
-          Authorization: "Bearer " + (await getToken()),
-        },
-      });
+      const response = await api.get("/api/adafruit/feeds");
       const data = {
         temperature:
           response.data.find((item: any) => item.name === "Temp").last_value ??
@@ -64,11 +101,7 @@ const fetchData = {
 
   getUserInfo: async () => {
     try {
-      const response = await api.get("/api/user/info", {
-        headers: {
-          Authorization: "Bearer " + (await getToken()),
-        },
-      });
+      const response = await api.get("/api/user/info");
       return {
         username: response.data.data.username,
         email: response.data.data.email,
@@ -81,11 +114,7 @@ const fetchData = {
 
   getStrategies: async () => {
     try {
-      const response = await api.get("/api/devices/strategy", {
-        headers: {
-          Authorization: "Bearer " + (await getToken()),
-        },
-      });
+      const response = await api.get("/api/devices/strategy");
       return response.data.data;
     } catch (error: any) {
       throw new Error(error.message);
@@ -94,11 +123,7 @@ const fetchData = {
 
   getDevices: async () => {
     try {
-      const response = await api.get("/api/devices", {
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-        },
-      });
+      const response = await api.get("/api/devices");
       return response.data.data;
     } catch (error: any) {
       throw new Error(
@@ -118,11 +143,7 @@ const fetchData = {
     }>;
   }) => {
     try {
-      const response = await api.post("/api/devices/strategy", strategyData, {
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-        },
-      });
+      const response = await api.post("/api/devices/strategy", strategyData);
       return response.data;
     } catch (error: any) {
       throw new Error(
@@ -147,12 +168,7 @@ const fetchData = {
     try {
       const response = await api.put(
         `/api/devices/strategy/${strategyId}`,
-        strategyData,
-        {
-          headers: {
-            Authorization: `Bearer ${await getToken()}`,
-          },
-        }
+        strategyData
       );
       return response.data;
     } catch (error: any) {
@@ -164,15 +180,24 @@ const fetchData = {
 
   deleteStrategy: async (strategyId: number) => {
     try {
-      const response = await api.delete(`/api/devices/strategy/${strategyId}`, {
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-        },
-      });
+      const response = await api.delete(`/api/devices/strategy/${strategyId}`);
       return response.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to delete strategy"
+      );
+    }
+  },
+
+  runStrategy: async (strategyId: number) => {
+    try {
+      const response = await api.post(
+        `/api/devices/strategy/${strategyId}/run`
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to run strategy"
       );
     }
   },

@@ -59,6 +59,7 @@ const DashBoardScreen = () => {
   };
 
 
+
   useFocusEffect(
     useCallback(() => {
       const idInterval = setInterval(() => {
@@ -68,6 +69,7 @@ const DashBoardScreen = () => {
       clearInterval(idInterval);
     };
   }, [])
+
   );
 
   return (

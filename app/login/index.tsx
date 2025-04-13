@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as Google from "expo-auth-session/providers/google";
@@ -26,7 +27,6 @@ const LoginScreen = () => {
     webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || "",
     scopes: ["profile", "email"],
   });
-
   // Function to save token to AsyncStorage
   const saveToken = async (token: string) => {
     try {
@@ -127,7 +127,7 @@ const LoginScreen = () => {
 
   const redirectRegister = () => {
     router.push("/register");
-  }
+  };
 
   return (
     <View className="flex-1 bg-white px-6 justify-center">
@@ -190,13 +190,9 @@ const LoginScreen = () => {
         </Text>
       </TouchableOpacity>
       <View className="flex-row justify-center mt-4">
-        <Text className="text-base text-gray-700">
-            Not have an account?{' '}
-          </Text>
+        <Text className="text-base text-gray-700">Not have an account? </Text>
         <TouchableOpacity onPress={redirectRegister}>
-          <Text className="text-blue-500 text-base">
-            Register now
-          </Text>
+          <Text className="text-blue-500 text-base">Register now</Text>
         </TouchableOpacity>
       </View>
     </View>
