@@ -13,7 +13,6 @@ import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/constants/ConfigEnv";
 
-
 const RegisterScreen = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -30,12 +29,16 @@ const RegisterScreen = () => {
   };
 
   const isValidEmail = (email: string) => {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailRegex.test(email);
-  }
+  };
 
   const isValidPhoneNumber = (phoneNumber: string) => {
-    return (phoneNumber.length >= 10 && phoneNumber.length <= 11) && !isNaN(Number(phoneNumber));
+    return (
+      phoneNumber.length >= 10 &&
+      phoneNumber.length <= 11 &&
+      !isNaN(Number(phoneNumber))
+    );
   };
 
   // Handle Username/Password Login
@@ -47,9 +50,7 @@ const RegisterScreen = () => {
     }
 
     if (!isValidEmail(email)) {
-      setError(
-        "Invalid email format! Example: example@gmail.com"
-      );
+      setError("Invalid email format! Example: example@gmail.com");
       return;
     }
 
@@ -66,9 +67,7 @@ const RegisterScreen = () => {
     }
 
     if (!isValidPhoneNumber(phoneNumber)) {
-      setError(
-        "Invalid phone number format!Please enter exactly 10-11 digits"
-      );
+      setError("Invalid phone number format!Please enter exactly 10-11 digits");
       return;
     }
 
@@ -88,15 +87,14 @@ const RegisterScreen = () => {
       }
       Alert.alert("Register Successful", `Let's login!`);
       router.push("/login");
-
     } catch (error: any) {
       setError(error.message);
     }
   };
 
   const redirectLogin = () => {
-    router.push('/login');
-  }
+    router.push("/login");
+  };
 
   return (
     <View className="flex-1 bg-white px-6 justify-center">
@@ -157,25 +155,27 @@ const RegisterScreen = () => {
       {/* Login Button */}
       <TouchableOpacity
         className={`py-4 rounded-lg mt-6 ${
-          username && password && email && confirmPassword && phoneNumber ? "bg-green-500" : "bg-gray-300"
+          username && password && email && confirmPassword && phoneNumber
+            ? "bg-green-500"
+            : "bg-gray-300"
         }`}
         onPress={handleRegister}
-        disabled={!username || !password || !email || !confirmPassword || !phoneNumber}
+        disabled={
+          !username || !password || !email || !confirmPassword || !phoneNumber
+        }
       >
         <Text className="text-white text-center font-semibold text-lg">
           Register
         </Text>
       </TouchableOpacity>
       <View className="flex-row justify-center mt-4">
-              <Text className="text-base text-gray-700">
-                  Already have an account?{' '}
-                </Text>
-              <TouchableOpacity onPress={redirectLogin}>
-                <Text className="text-blue-500 text-base">
-                  Login now
-                </Text>
-              </TouchableOpacity>
-            </View>
+        <Text className="text-base text-gray-700">
+          Already have an account?{" "}
+        </Text>
+        <TouchableOpacity onPress={redirectLogin}>
+          <Text className="text-blue-500 text-base">Login now</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

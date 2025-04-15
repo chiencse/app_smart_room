@@ -223,7 +223,7 @@ const fetchData = {
 
       const userInfo = await fetchData.getUserInfo();
       let userUsage = data.filter(
-        (ele: any) => (ele.username === userInfo.username)
+        (ele: any) => ele.username === userInfo.username
       );
       userUsage = userUsage.reduce((acc: any, ele: any) => {
         acc[ele.deviceKey] = (acc[ele.deviceKey] || 0) + 1;
@@ -233,7 +233,7 @@ const fetchData = {
       return {
         totalUsage: totalUsage,
         userUsage: userUsage,
-      }
+      };
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Failed to get logs");
     }
@@ -243,11 +243,50 @@ const fetchData = {
     try {
       const response = await api.get(`/api/activity/logs`);
       let data = response.data;
-      data = data.filter((ele: any) => (new Date(ele.time)).getDate() === date.getDate())
+      data = data.filter(
+        (ele: any) => new Date(ele.time).getDate() === date.getDate()
+      );
       data.sort((a: any, b: any) => Date.parse(b.time) - Date.parse(a.time));
       return data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Failed to get logs");
+    }
+  },
+
+  chatWithAI: async (message: string) => {
+    try {
+      // Increase timeout for AI responses which might take longer
+      const response = await api.post("/api/ai/chat", message, {
+        timeout: 5000, // 30 seconds timeout
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Validate response
+      if (!response.data || typeof response.data.message !== "string") {
+        throw new Error("Invalid response format from server");
+      }
+
+      return response.data;
+    } catch (error: any) {
+      // Handle timeout errors specifically
+      if (error.code === "ECONNABORTED") {
+        throw new Error(
+          "Yêu cầu của bạn đang được xử lý, vui lòng thử lại sau"
+        );
+      }
+
+      // Handle network errors
+      if (!error.response) {
+        throw new Error(
+          "Không thể kết nối đến máy chủ, vui lòng kiểm tra kết nối mạng"
+        );
+      }
+
+      throw new Error(
+        error.response?.data?.message || "Failed to get response from AI"
+      );
     }
   },
 };
