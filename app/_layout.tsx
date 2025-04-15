@@ -12,10 +12,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 import "react-native-reanimated";
 import "../global.css";
-import { AppState } from "react-native";
+import { AppState, View } from "react-native";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import useRouteLogger from "@/hooks/useRouteLogger";
+import ChatBox from "../components/ChatBox";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -100,15 +101,18 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="login/index" />
-        <Stack.Screen name="register/index" />
-        <Stack.Screen name="home/index" />
-        <Stack.Screen name="profile" />
-        <Stack.Screen name="dashboard" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+      <View style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="login/index" />
+          <Stack.Screen name="register/index" />
+          <Stack.Screen name="home/index" />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="dashboard" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <ChatBox />
+        <StatusBar style="auto" />
+      </View>
     </ThemeProvider>
   );
 }
