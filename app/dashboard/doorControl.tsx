@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import fetchData from "@/utils/fetchData";
 import { useFocusEffect } from "@react-navigation/native";
 import controlDevice from "@/utils/controlDevice";
@@ -26,27 +25,20 @@ const DoorControlScreen = () => {
     fetchData
       .getDeviceInfo("device.door")
       .then((data) => setDeviceStatus(data));
-    // fetchData
-    //   .getDeviceInfo("device.status-door")
-    //   .then((data) => setAutoMode(data));
   };
 
   useFocusEffect(
     useCallback(() => {
       if (isLoading) {
-        setIdInterval(
-          setInterval(() => {
-            getData();
-          }, 2000)
-        );
-
+        getData();
+        setIdInterval(setInterval(() => getData(), 2000));
         setIsLoading(false);
       } else {
         return () => {
           if (idInterval) {
             clearInterval(idInterval);
           }
-          setIsLoading(true)
+          setIsLoading(true);
         };
       }
     }, [isLoading])
@@ -57,8 +49,8 @@ const DoorControlScreen = () => {
       clearInterval(idInterval);
       setIdInterval(null);
     }
-    setDeviceStatus(value);
     await controlDevice.control("device.door", value);
+    setDeviceStatus(value);
     setIsLoading(true);
   };
 

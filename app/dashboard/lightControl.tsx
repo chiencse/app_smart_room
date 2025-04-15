@@ -34,12 +34,8 @@ const LightControlScreen = () => {
   useFocusEffect(
     useCallback(() => {
       if (isLoading) {
-        setIdInterval(
-          setInterval(() => {
-            getData();
-          }, 2000)
-        );
-
+        getData();
+        setIdInterval(setInterval(() => getData(), 2000));
         setIsLoading(false);
       } else {
         return () => {
@@ -57,8 +53,8 @@ const LightControlScreen = () => {
       clearInterval(idInterval);
       setIdInterval(null);
     }
-    setAutoMode(value);
     await controlDevice.control("device.status-lamp", value);
+    setAutoMode(value);
     setIsLoading(true);
   };
 
@@ -67,8 +63,8 @@ const LightControlScreen = () => {
       clearInterval(idInterval);
       setIdInterval(null);
     }
-    setDeviceStatus(value);
     await controlDevice.control("device.lamp", value);
+    setDeviceStatus(value);
     setIsLoading(true);
   };
 

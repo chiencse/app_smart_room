@@ -3,10 +3,9 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 
@@ -15,14 +14,12 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
-import DeviceCard from "../../components/DeviceCard";
-import EnvInfoCard from "../../components/EnvInfoCard";
+import DeviceCard from "@/components/DeviceCard";
+import EnvInfoCard from "@/components/EnvInfoCard";
 
 import fetchData from "@/utils/fetchData";
 
 const DashBoardScreen = () => {
-  const { width, height } = Dimensions.get("window");
-
   const navigation = useNavigation();
 
   const [envInfo, setEnvInfo] = useState({
@@ -33,8 +30,8 @@ const DashBoardScreen = () => {
   });
 
   const [statusDevice, setStatusDevice] = useState({
-    light: 'OFF',
-    door: 'OFF',
+    light: "OFF",
+    door: "OFF",
     fan: 0,
   });
 
@@ -58,22 +55,18 @@ const DashBoardScreen = () => {
     }
   };
 
-
-
   useFocusEffect(
     useCallback(() => {
-      const idInterval = setInterval(() => {
-        fetchInfomation();
-      }, 2000);
-    return () => {
-      clearInterval(idInterval);
-    };
-  }, [])
-
+      fetchInfomation();
+      const idInterval = setInterval(() => fetchInfomation(), 2000);
+      return () => {
+        clearInterval(idInterval);
+      };
+    }, [])
   );
 
   return (
-    <View style={{ backgroundColor: "white", width: width, height: height }}>
+    <View style={{ backgroundColor: "white", flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Room</Text>
       </View>
@@ -184,11 +177,6 @@ const styles = StyleSheet.create({
     marginTop: 30,
     fontSize: 24,
     fontWeight: 600,
-  },
-
-  body: {
-    flex: 1,
-    backgroundColor: "white",
   },
 
   group: {

@@ -26,7 +26,6 @@ import controlDevice from "./../../utils/controlDevice";
 
 const FanControlScreen = () => {
   const { width, height } = Dimensions.get("window");
-  const navigation = useNavigation();
 
   const [deviceStatus, setDeviceStatus] = useState<number>(0);
   const [autoMode, setAutoMode] = useState<string>("Manual");
@@ -44,12 +43,8 @@ const FanControlScreen = () => {
   useFocusEffect(
     useCallback(() => {
       if (isLoading) {
-        setIdInterval(
-          setInterval(() => {
-            getData();
-          }, 2000)
-        );
-
+        getData();
+        setIdInterval(setInterval(() => getData(), 2000));
         setIsLoading(false);
       } else {
         return () => {
@@ -146,7 +141,10 @@ const FanControlScreen = () => {
               <View style={styles.sliderBackground}>
                 <Animated.View
                   style={[
-                    { ...styles.fill, backgroundColor: autoMode == "Auto" ? "#aaa" :"#34E0A1" },
+                    {
+                      ...styles.fill,
+                      backgroundColor: autoMode == "Auto" ? "#aaa" : "#34E0A1",
+                    },
                     animatedStyle,
                   ]}
                 >
