@@ -88,11 +88,7 @@ const fetchData = {
 
   getDeviceInfo: async (deviceKey: String) => {
     try {
-      const response = await api.get(`/api/adafruit/feeds/${deviceKey}`, {
-        headers: {
-          Authorization: "Bearer " + (await getToken()),
-        },
-      });
+      const response = await api.get(`/api/adafruit/feeds/${deviceKey}`);
       return response.data.value;
     } catch (error: any) {
       throw new Error(error.message);
@@ -199,6 +195,59 @@ const fetchData = {
       throw new Error(
         error.response?.data?.message || "Failed to run strategy"
       );
+    }
+  },
+
+  getAnalytic: async () => {
+    try {
+      const response = await api.get(`/api/activity/logs`);
+      const now = new Date().toLocaleString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      let data = response.data;
+      data = data.filter(
+        (ele: any) =>
+          new Date(ele.time).toLocaleString("vi-VN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }) === now
+      );
+
+      const totalUsage = data.reduce((acc: any, ele: any) => {
+        acc[ele.deviceKey] = (acc[ele.deviceKey] || 0) + 1;
+        return acc;
+      }, {});
+
+      const userInfo = await fetchData.getUserInfo();
+      let userUsage = data.filter(
+        (ele: any) => (ele.username === userInfo.username)
+      );
+      userUsage = userUsage.reduce((acc: any, ele: any) => {
+        acc[ele.deviceKey] = (acc[ele.deviceKey] || 0) + 1;
+        return acc;
+      }, {});
+
+      return {
+        totalUsage: totalUsage,
+        userUsage: userUsage,
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to get logs");
+    }
+  },
+
+  getLogs: async (date: Date) => {
+    try {
+      const response = await api.get(`/api/activity/logs`);
+      let data = response.data;
+      data = data.filter((ele: any) => (new Date(ele.time)).getDate() === date.getDate())
+      data.sort((a: any, b: any) => Date.parse(b.time) - Date.parse(a.time));
+      return data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to get logs");
     }
   },
 };
