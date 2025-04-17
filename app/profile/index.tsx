@@ -29,10 +29,11 @@ const MenuItem = ({ icon, title, onPress }: MenuItemProps) => (
 
 const ProfileScreen = () => {
   const [email, setEmail] = useState("");
-
+  const [name, setName] = useState("");
   const fetchUserInfo = async () => {
     try {
       const userInfo: any = await fetchData.getUserInfo();
+      setName(userInfo.username);
       setEmail(userInfo.email);
     } catch (error) {
       console.error(error);
@@ -87,7 +88,7 @@ const ProfileScreen = () => {
             <Ionicons name="pencil" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.name}>Name</Text>
+        <Text style={styles.name}>{name}</Text>
         <Text style={styles.email}>{email}</Text>
       </View>
 
@@ -96,6 +97,11 @@ const ProfileScreen = () => {
           icon="person-outline"
           title="Profile details"
           onPress={() => router.push("/profile/edit")}
+        />
+        <MenuItem
+          icon="people-outline"
+          title="Account Management"
+          onPress={() => router.push("/profile/accounts")}
         />
         <MenuItem icon="settings-outline" title="Settings" onPress={() => {}} />
         <MenuItem

@@ -9,6 +9,7 @@ import {
   StatusBar,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
@@ -28,12 +29,14 @@ interface Strategy {
   description: string;
   status: string;
   startTime: string | null;
+  repeatStatus: string;
   listDeviceValues: DeviceValue[];
 }
 
 const StrategyScreen = () => {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   useEffect(() => {
     fetchStrategies();
@@ -73,11 +76,14 @@ const StrategyScreen = () => {
           style: "destructive",
           onPress: async () => {
             try {
+              setActionLoading(strategy.id);
               await fetchData.deleteStrategy(strategy.id);
               await fetchStrategies();
             } catch (error) {
               console.error("Error deleting strategy:", error);
               Alert.alert("Error", "Failed to delete strategy");
+            } finally {
+              setActionLoading(null);
             }
           },
         },
@@ -87,6 +93,7 @@ const StrategyScreen = () => {
 
   const handleRunStrategy = async (strategyId: number) => {
     try {
+      setActionLoading(strategyId);
       await fetchData.runStrategy(strategyId);
       await fetchStrategies();
       Alert.alert("Success", "Strategy started successfully");
@@ -94,7 +101,7 @@ const StrategyScreen = () => {
       console.error("Error running strategy:", error);
       Alert.alert("Error", "Failed to run strategy");
     } finally {
-      Alert.alert("Success", "Strategy started successfully");
+      setActionLoading(null);
     }
   };
 
@@ -140,13 +147,61 @@ const StrategyScreen = () => {
                   <View style={styles.autoRunTime}>
                     <Ionicons name="time-outline" size={16} color="#666" />
                     <Text style={styles.autoRunTimeText}>
-                      {strategy.startTime}
+                      {strategy.startTime ? strategy.startTime : "Not set"}
                     </Text>
                   </View>
                 </View>
                 <Text style={styles.strategyDescription}>
                   {strategy.description}
                 </Text>
+                <View style={styles.strategyMetaInfo}>
+                  <View style={styles.repeatStatusChip}>
+                    <Ionicons
+                      name={
+                        strategy.repeatStatus === "REPEAT_DAILY"
+                          ? "repeat"
+                          : "calendar"
+                      }
+                      size={14}
+                      color="#666"
+                    />
+                    <Text style={styles.repeatStatusText}>
+                      {strategy.repeatStatus === "REPEAT_DAILY"
+                        ? "Daily"
+                        : "One Time"}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.statusChip,
+                      {
+                        backgroundColor:
+                          strategy.status === "ACTIVE" ? "#e6f7f0" : "#f5f5f5",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={
+                        strategy.status === "ACTIVE"
+                          ? "checkmark-circle"
+                          : "close-circle"
+                      }
+                      size={14}
+                      color={strategy.status === "ACTIVE" ? "#34E0A1" : "#666"}
+                    />
+                    <Text
+                      style={[
+                        styles.statusText,
+                        {
+                          color:
+                            strategy.status === "ACTIVE" ? "#34E0A1" : "#666",
+                        },
+                      ]}
+                    >
+                      {strategy.status}
+                    </Text>
+                  </View>
+                </View>
                 <View style={styles.devicesList}>
                   {strategy.listDeviceValues.map((device) => (
                     <View
@@ -174,19 +229,32 @@ const StrategyScreen = () => {
                 <TouchableOpacity
                   style={styles.runButton}
                   onPress={() => handleRunStrategy(strategy.id)}
+                  disabled={actionLoading === strategy.id}
                 >
-                  <Ionicons name="play" size={20} color="#fff" />
-                  <Text style={styles.runButtonText}>Run</Text>
+                  {actionLoading === strategy.id ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Ionicons name="play" size={20} color="#fff" />
+                      <Text style={styles.runButtonText}>Run</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.deleteButton}
                   onPress={() => handleDeleteStrategy(strategy)}
+                  disabled={actionLoading === strategy.id}
                 >
-                  <Ionicons name="trash-outline" size={20} color="#ff4444" />
+                  {actionLoading === strategy.id ? (
+                    <ActivityIndicator size="small" color="#ff4444" />
+                  ) : (
+                    <Ionicons name="trash-outline" size={20} color="#ff4444" />
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.editButton}
                   onPress={() => handleEditStrategy(strategy)}
+                  disabled={actionLoading === strategy.id}
                 >
                   <Ionicons name="chevron-forward" size={24} color="#666" />
                 </TouchableOpacity>
@@ -263,6 +331,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginBottom: 8,
+  },
+  strategyMetaInfo: {
+    flexDirection: "row",
+    marginBottom: 8,
+    gap: 8,
+  },
+  repeatStatusChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  repeatStatusText: {
+    fontSize: 12,
+    color: "#666",
+  },
+  statusChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "500",
   },
   devicesList: {
     flexDirection: "row",

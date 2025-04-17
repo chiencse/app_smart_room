@@ -104,7 +104,6 @@ export default function RootLayout() {
       <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="login/index" />
-          <Stack.Screen name="register/index" />
           <Stack.Screen name="home/index" />
           <Stack.Screen name="profile" />
           <Stack.Screen name="dashboard" />

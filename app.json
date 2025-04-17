@@ -9,14 +9,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.chiencse.smartRoom"
+      "package": "com.chiencse.smartRoom",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -46,6 +50,9 @@
         "projectId": "ce392461-d794-4c8e-a53e-43e52318b689"
       }
     },
-    "owner": "chiencse"
+    "owner": "chiencse",
+    "updates": {
+      "url": "https://u.expo.dev/ce392461-d794-4c8e-a53e-43e52318b689"
+    }
   }
 }

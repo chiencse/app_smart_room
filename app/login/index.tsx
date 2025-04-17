@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Alert,
   Image,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as Google from "expo-auth-session/providers/google";
@@ -21,12 +22,33 @@ const LoginScreen = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "",
-    webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || "",
     scopes: ["profile", "email"],
   });
+
+  useEffect(() => {
+    // Check if we're already authenticated
+    const checkAuth = async () => {
+      try {
+        const token = await AsyncStorage.getItem("authToken");
+        if (token) {
+          router.replace("/home");
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
   // Function to save token to AsyncStorage
   const saveToken = async (token: string) => {
     try {
@@ -45,6 +67,8 @@ const LoginScreen = () => {
 
   // Handle Username/Password Login
   const handleLogin = async () => {
+    if (!isReady) return;
+
     setError(""); // Reset error state
     if (!username || !password) {
       setError("Both fields are required!");
@@ -58,6 +82,7 @@ const LoginScreen = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const response = await fetch(`${config.BACKEND_URL}/auth/login`, {
         method: "POST",
@@ -77,21 +102,26 @@ const LoginScreen = () => {
       if (token) {
         await saveToken(token); // Save the token
         Alert.alert("Login Successful", `Welcome, ${username}!`);
-        router.push("/home");
+        router.replace("/home");
       } else {
         throw new Error("No token received from server");
       }
     } catch (error) {
       setError("Login failed. Please check your credentials." + error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Handle Google Login
   const handleGoogleLogin = async () => {
+    if (!isReady) return;
+
+    setIsGoogleLoading(true);
     try {
       const result = await promptAsync();
       if (result.type === "success") {
-        const accessToken = result.authentication?.accessToken;
+        const { id_token } = result.params;
 
         // Send token to backend for verification
         const response = await fetch(
@@ -101,7 +131,7 @@ const LoginScreen = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ token: accessToken }),
+            body: JSON.stringify({ token: id_token }),
           }
         );
 
@@ -115,19 +145,25 @@ const LoginScreen = () => {
         if (token) {
           await saveToken(token); // Save the token
           Alert.alert("Login Successful", "Welcome!");
-          router.push("/home");
+          router.replace("/home");
         } else {
           throw new Error("No token received from server");
         }
       }
     } catch (error) {
       setError("Google login failed. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
-  const redirectRegister = () => {
-    router.push("/register");
-  };
+  if (!isReady) {
+    return (
+      <View className="flex-1 bg-white justify-center items-center">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-white px-6 justify-center">
@@ -172,29 +208,31 @@ const LoginScreen = () => {
           username && password ? "bg-green-500" : "bg-gray-300"
         }`}
         onPress={handleLogin}
-        disabled={!username || !password}
+        disabled={!username || !password || isLoading}
       >
-        <Text className="text-white text-center font-semibold text-lg">
-          LOGIN
-        </Text>
+        {isLoading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text className="text-white text-center font-semibold text-lg">
+            LOGIN
+          </Text>
+        )}
       </TouchableOpacity>
 
       {/* Google Login Button */}
       <TouchableOpacity
         className="py-4 rounded-lg mt-4 bg-blue-500"
         onPress={handleGoogleLogin}
-        disabled={!request}
+        disabled={!request || isGoogleLoading}
       >
-        <Text className="text-white text-center font-semibold text-lg">
-          LOGIN WITH GOOGLE
-        </Text>
+        {isGoogleLoading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text className="text-white text-center font-semibold text-lg">
+            LOGIN WITH GOOGLE
+          </Text>
+        )}
       </TouchableOpacity>
-      <View className="flex-row justify-center mt-4">
-        <Text className="text-base text-gray-700">Not have an account? </Text>
-        <TouchableOpacity onPress={redirectRegister}>
-          <Text className="text-blue-500 text-base">Register now</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
