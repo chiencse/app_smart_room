@@ -5,7 +5,7 @@ export const ENVIRONMENT_THRESHOLDS = {
   },
   humidity: {
     min: 30,
-    max: 70,
+    max: 90,
   },
   brightness: {
     min: 20,
@@ -13,6 +13,6 @@ export const ENVIRONMENT_THRESHOLDS = {
   },
   airQuality: {
     min: 0,
-    max: 100,
+    max: 1000,
   },
 };
