@@ -50,6 +50,8 @@ const MessageBubble = memo(({ msg }: { msg: Message }) => {
       )}
       <Text
         style={[styles.messageText, { color: msg.isUser ? "#fff" : "#000" }]}
+        numberOfLines={0}
+        adjustsFontSizeToFit={false}
       >
         {msg.text}
       </Text>
@@ -415,7 +417,8 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
   },
   userMessage: {
     backgroundColor: "#007AFF",
@@ -430,9 +433,12 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 16,
     lineHeight: 20,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   botIcon: {
     marginRight: 8,
+    marginTop: 2,
   },
   inputContainer: {
     flexDirection: "row",

@@ -10,6 +10,7 @@ import {
   Platform,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -43,6 +44,7 @@ interface Strategy {
   description: string;
   status: string;
   startTime: string | null;
+  repeatStatus: string;
   listDeviceValues: DeviceValue[];
 }
 
@@ -52,11 +54,13 @@ const EditStrategyScreen = () => {
     id: 0,
     name: "",
     description: "",
-    status: "",
+    status: "ACTIVE",
     startTime: null,
+    repeatStatus: "ONE_TIME",
     listDeviceValues: [],
   });
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [availableDevices, setAvailableDevices] = useState<Device[]>([]);
 
   useEffect(() => {
@@ -75,6 +79,11 @@ const EditStrategyScreen = () => {
         (s: Strategy) => s.id === Number(id)
       );
       if (foundStrategy) {
+        // Format startTime if it's a timestamp
+        // const formattedStrategy = {
+        //   ...foundStrategy,
+        //   startTime: formatTime(foundStrategy.startTime || ""),
+        // };
         setStrategy(foundStrategy);
       } else {
         Alert.alert("Error", "Strategy not found");
@@ -100,6 +109,7 @@ const EditStrategyScreen = () => {
 
   const handleSave = async () => {
     try {
+      setSaving(true);
       // Validate required fields
       if (!strategy.name.trim()) {
         Alert.alert("Error", "Strategy name is required");
@@ -120,11 +130,24 @@ const EditStrategyScreen = () => {
         return;
       }
 
+      // Validate startTime format (HH:mm)
+      if (
+        strategy.startTime &&
+        !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(strategy.startTime)
+      ) {
+        Alert.alert(
+          "Error",
+          "Start time must be in HH:mm format (e.g., 14:30)"
+        );
+        return;
+      }
+
       const strategyData = {
         name: strategy.name.trim(),
         description: strategy.description.trim(),
         status: strategy.status.trim(),
-        startTime: strategy.startTime || new Date().getTime().toString(),
+        startTime: strategy.startTime || new Date().getHours().toString(),
+        repeatStatus: strategy.repeatStatus,
         listDeviceValues: strategy.listDeviceValues.map((device) => ({
           deviceId: device.deviceId,
           value: device.value.trim(),
@@ -143,6 +166,8 @@ const EditStrategyScreen = () => {
       const errorMessage =
         error.response?.data?.message || "Failed to save strategy";
       Alert.alert("Error", errorMessage);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -238,8 +263,14 @@ const EditStrategyScreen = () => {
           <Text style={styles.title}>
             {id ? "Edit Strategy" : "New Strategy"}
           </Text>
-          <TouchableOpacity onPress={handleSave}>
-            <Ionicons name="checkmark" size={24} color="#34E0A1" />
+          <TouchableOpacity onPress={handleSave} disabled={saving}>
+            {saving ? (
+              <View style={styles.loadingIndicator}>
+                <ActivityIndicator size="small" color="#34E0A1" />
+              </View>
+            ) : (
+              <Ionicons name="checkmark" size={24} color="#34E0A1" />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -268,8 +299,92 @@ const EditStrategyScreen = () => {
               onChangeText={(text) =>
                 setStrategy({ ...strategy, startTime: text })
               }
-              placeholder="StartTime"
+              placeholder="StartTime (HH:mm)"
             />
+            <View style={styles.repeatStatusContainer}>
+              <Text style={styles.repeatStatusLabel}>Repeat Status:</Text>
+              <View style={styles.repeatStatusOptions}>
+                <TouchableOpacity
+                  style={[
+                    styles.repeatStatusOption,
+                    strategy.repeatStatus === "ONE_TIME" &&
+                      styles.selectedOption,
+                  ]}
+                  onPress={() =>
+                    setStrategy({ ...strategy, repeatStatus: "ONE_TIME" })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.repeatStatusText,
+                      strategy.repeatStatus === "ONE_TIME" &&
+                        styles.selectedText,
+                    ]}
+                  >
+                    One Time
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.repeatStatusOption,
+                    strategy.repeatStatus === "REPEAT_DAILY" &&
+                      styles.selectedOption,
+                  ]}
+                  onPress={() =>
+                    setStrategy({ ...strategy, repeatStatus: "REPEAT_DAILY" })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.repeatStatusText,
+                      strategy.repeatStatus === "REPEAT_DAILY" &&
+                        styles.selectedText,
+                    ]}
+                  >
+                    Daily
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.statusContainer}>
+              <Text style={styles.statusLabel}>Status:</Text>
+              <View style={styles.statusOptions}>
+                <TouchableOpacity
+                  style={[
+                    styles.statusOption,
+                    strategy.status === "ACTIVE" && styles.selectedOption,
+                  ]}
+                  onPress={() => setStrategy({ ...strategy, status: "ACTIVE" })}
+                >
+                  <Text
+                    style={[
+                      styles.statusText,
+                      strategy.status === "ACTIVE" && styles.selectedText,
+                    ]}
+                  >
+                    Active
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.statusOption,
+                    strategy.status === "INACTIVE" && styles.selectedOption,
+                  ]}
+                  onPress={() =>
+                    setStrategy({ ...strategy, status: "INACTIVE" })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.statusText,
+                      strategy.status === "INACTIVE" && styles.selectedText,
+                    ]}
+                  >
+                    Inactive
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
 
           <View style={styles.section}>
@@ -552,6 +667,62 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     marginLeft: 8,
+  },
+  repeatStatusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  repeatStatusLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginRight: 8,
+  },
+  repeatStatusOptions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  repeatStatusOption: {
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+  },
+  selectedOption: {
+    borderColor: "#34E0A1",
+  },
+  repeatStatusText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  selectedText: {
+    fontWeight: "600",
+  },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  statusLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginRight: 8,
+  },
+  statusOptions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  statusOption: {
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+  },
+  loadingIndicator: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

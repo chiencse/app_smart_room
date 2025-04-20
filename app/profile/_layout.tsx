@@ -22,6 +22,12 @@ export default function ProfileLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="accounts"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

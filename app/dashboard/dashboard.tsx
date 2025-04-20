@@ -4,8 +4,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 
@@ -16,6 +17,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import DeviceCard from "@/components/DeviceCard";
 import EnvInfoCard from "@/components/EnvInfoCard";
+import { ENVIRONMENT_THRESHOLDS } from "@/constants/Thresholds";
 
 import fetchData from "@/utils/fetchData";
 
@@ -35,6 +37,118 @@ const DashBoardScreen = () => {
     fan: 0,
   });
 
+  // Lưu trữ trạng thái trước đó của các giá trị
+  const prevEnvInfoRef = useRef({
+    temperature: 0,
+    humidity: 0,
+    brightness: 0,
+    airQuality: 0,
+  });
+
+  const checkThresholdStatus = (value: number, min: number, max: number) => {
+    if (value < min) return "low";
+    if (value > max) return "high";
+    return "normal";
+  };
+
+  const checkEnvironmentWarnings = (data: any) => {
+    const warnings = [];
+    const prevData = prevEnvInfoRef.current;
+
+    // Kiểm tra nhiệt độ
+    const tempStatus = checkThresholdStatus(
+      data.temperature,
+      ENVIRONMENT_THRESHOLDS.temperature.min,
+      ENVIRONMENT_THRESHOLDS.temperature.max
+    );
+    const prevTempStatus = checkThresholdStatus(
+      prevData.temperature,
+      ENVIRONMENT_THRESHOLDS.temperature.min,
+      ENVIRONMENT_THRESHOLDS.temperature.max
+    );
+    if (tempStatus !== "normal" && prevTempStatus === "normal") {
+      warnings.push(
+        `Temperature is ${tempStatus} (${data.temperature}°C). ${
+          tempStatus === "low"
+            ? `Minimum recommended: ${ENVIRONMENT_THRESHOLDS.temperature.min}°C`
+            : `Maximum recommended: ${ENVIRONMENT_THRESHOLDS.temperature.max}°C`
+        }`
+      );
+    }
+
+    // Kiểm tra độ ẩm
+    const humidityStatus = checkThresholdStatus(
+      data.humidity,
+      ENVIRONMENT_THRESHOLDS.humidity.min,
+      ENVIRONMENT_THRESHOLDS.humidity.max
+    );
+    const prevHumidityStatus = checkThresholdStatus(
+      prevData.humidity,
+      ENVIRONMENT_THRESHOLDS.humidity.min,
+      ENVIRONMENT_THRESHOLDS.humidity.max
+    );
+    if (humidityStatus !== "normal" && prevHumidityStatus === "normal") {
+      warnings.push(
+        `Humidity is ${humidityStatus} (${data.humidity}%). ${
+          humidityStatus === "low"
+            ? `Minimum recommended: ${ENVIRONMENT_THRESHOLDS.humidity.min}%`
+            : `Maximum recommended: ${ENVIRONMENT_THRESHOLDS.humidity.max}%`
+        }`
+      );
+    }
+
+    // Kiểm tra độ sáng
+    const brightnessStatus = checkThresholdStatus(
+      data.brightness,
+      ENVIRONMENT_THRESHOLDS.brightness.min,
+      ENVIRONMENT_THRESHOLDS.brightness.max
+    );
+    const prevBrightnessStatus = checkThresholdStatus(
+      prevData.brightness,
+      ENVIRONMENT_THRESHOLDS.brightness.min,
+      ENVIRONMENT_THRESHOLDS.brightness.max
+    );
+    if (brightnessStatus !== "normal" && prevBrightnessStatus === "normal") {
+      warnings.push(
+        `Brightness is ${brightnessStatus} (${data.brightness}%). ${
+          brightnessStatus === "low"
+            ? `Minimum recommended: ${ENVIRONMENT_THRESHOLDS.brightness.min}%`
+            : `Maximum recommended: ${ENVIRONMENT_THRESHOLDS.brightness.max}%`
+        }`
+      );
+    }
+
+    // Kiểm tra chất lượng không khí
+    const airQualityStatus = checkThresholdStatus(
+      data.airQuality,
+      ENVIRONMENT_THRESHOLDS.airQuality.min,
+      ENVIRONMENT_THRESHOLDS.airQuality.max
+    );
+    const prevAirQualityStatus = checkThresholdStatus(
+      prevData.airQuality,
+      ENVIRONMENT_THRESHOLDS.airQuality.min,
+      ENVIRONMENT_THRESHOLDS.airQuality.max
+    );
+    if (airQualityStatus !== "normal" && prevAirQualityStatus === "normal") {
+      warnings.push(
+        `Air Quality is ${airQualityStatus} (${data.airQuality}). ${
+          airQualityStatus === "low"
+            ? `Minimum recommended: ${ENVIRONMENT_THRESHOLDS.airQuality.min}`
+            : `Maximum recommended: ${ENVIRONMENT_THRESHOLDS.airQuality.max}`
+        }`
+      );
+    }
+
+    if (warnings.length > 0) {
+      Alert.alert("Environment Warnings", warnings.join("\n"), [
+        { text: "OK" },
+      ]);
+    }
+
+    // Cập nhật giá trị trước đó
+    prevEnvInfoRef.current = { ...data };
+  };
+
   const fetchInfomation = async () => {
     try {
       const data: any = await fetchData.getInfo();
@@ -50,8 +164,11 @@ const DashBoardScreen = () => {
         door: data.door,
         fan: data.fan,
       });
+
+      checkEnvironmentWarnings(data);
     } catch (error) {
       console.error(error);
+      Alert.alert("Error", "Failed to fetch environment data");
     }
   };
 
